@@ -198,6 +198,46 @@ async function renderLanding() {
   app.innerHTML = "";
   const ok = await showPlanet({ onSignIn: doSignIn });
   if (!ok && !S.user) renderLandingFallback();
+  else mountGoogleButton($("#intro-open"));
+}
+
+// Google's own button opens the account picker right away. Firebase's popup
+// has to load a helper page first, which is very slow on iPhone Safari.
+let gis = null;
+function loadGIS() {
+  if (DEMO || !api.GOOGLE_CLIENT_ID) return Promise.resolve(false);
+  return gis ||= new Promise((res) => {
+    const s = document.createElement("script");
+    s.src = "https://accounts.google.com/gsi/client";
+    s.async = true;
+    s.onload = () => {
+      try {
+        google.accounts.id.initialize({
+          client_id: api.GOOGLE_CLIENT_ID,
+          ux_mode: "popup",
+          callback: async (r) => {
+            try { await api.signInWithIdToken(r.credential); }
+            catch { toast("Sign-in failed. Try again?", "bad"); }
+          },
+        });
+        res(true);
+      } catch { res(false); }
+    };
+    s.onerror = () => res(false);
+    document.head.appendChild(s);
+  });
+}
+async function mountGoogleButton(btn) {
+  if (!btn || btn.nextElementSibling?.classList.contains("gis-btn")) return;
+  if (!(await loadGIS()) || S.user) return;
+  const box = document.createElement("div");
+  box.className = "gis-btn";
+  btn.after(box);
+  google.accounts.id.renderButton(box, {
+    type: "standard", theme: "outline", size: "large", shape: "pill",
+    text: "signin_with", logo_alignment: "left", width: 260,
+  });
+  btn.hidden = true;
 }
 async function doSignIn() {
   chime();
@@ -233,6 +273,7 @@ function renderLandingFallback() {
     sparkleAt(t.querySelector(".t-star"));
     $$(".t-orn", t).forEach((o, i) => { o.classList.remove("swing"); void o.getBoundingClientRect(); o.classList.add("swing"); });
   };
+  mountGoogleButton($("#signin"));
   $("#signin").onclick = async () => {
     chime();
     try { await api.signIn(); }
