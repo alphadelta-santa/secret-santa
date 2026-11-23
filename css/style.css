@@ -1026,20 +1026,20 @@ input.invalid { border-color: #ff4d6d !important; box-shadow: 0 0 0 4px rgba(255
 .dots { grid-template-columns: repeat(9, minmax(0, 34px)); justify-content: start; }
 @media (min-width: 900px) { #view > .card .dots { grid-template-columns: repeat(18, minmax(0, 34px)); } }
 
-/* ---------- phones: lighter rendering ---------- */
-html.mobile * { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
-html.mobile .card { background: rgba(22, 32, 72, .92); box-shadow: 0 10px 24px rgba(0, 0, 0, .3); }
-html.mobile .modal { background: rgba(3, 6, 20, .85); }
-html.mobile #mute-btn, html.mobile #sound-btn, html.mobile .aurora, html.mobile #aurora { display: none !important; }
-html.mobile .slot-beams, html.mobile .result-rays { display: none; }
-html.mobile .slot-machine, html.mobile .slot-ov.show-result .slot-machine { filter: none; }
-html.mobile .bulbs i { box-shadow: none; animation-name: chaseLite; }
+/* ---------- lighter rendering (all devices) ---------- */
+html.plain * { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+html.plain .card { background: rgba(22, 32, 72, .92); box-shadow: 0 10px 24px rgba(0, 0, 0, .3); }
+html.plain .modal { background: rgba(3, 6, 20, .85); }
+html.mobile #mute-btn, html.mobile #sound-btn { display: none !important; }
+html.plain .aurora, html.plain #aurora { display: none !important; }
+html.plain .slot-beams, html.plain .result-rays { display: none; }
+html.plain .slot-machine, html.plain .slot-ov.show-result .slot-machine { filter: none; }
+html.plain .bulbs i { box-shadow: none; animation-name: chaseLite; }
 @keyframes chaseLite { 0%, 70% { opacity: .3; } 75%, 95% { opacity: 1; } }
-html.mobile .slot-ov.win .bulbs i { animation: winBulbsLite .25s steps(2) infinite; }
+html.plain .slot-ov.win .bulbs i { animation: winBulbsLite .25s steps(2) infinite; }
 @keyframes winBulbsLite { 50% { background: #ff3b5c; } }
-html.mobile .sm-sign span { animation: none; text-shadow: 0 0 6px #fff, 0 0 16px #ff3b8a; }
-html.mobile .sreel.side .face .i { filter: none; }
-html.mobile .slot-ov.win .sreel.locked { animation: lockBounce .45s; }
+html.plain .sm-sign span { animation: none; text-shadow: 0 0 6px #fff, 0 0 16px #ff3b8a; }
+html.plain .sreel.side .face .i { filter: none; }
 
 /* slot reels: flat strips that slide smoothly, no shaking or bouncing */
 .sreel { perspective: none; }
