@@ -180,7 +180,34 @@ api.onAuth(async (user) => {
   sub(api.watchEvent((e) => { S.event = e || {}; updateEvent(); updateDrawStatus(); updateBudget(); updateTheirList(); updateTheirProfile(); updateMyList(); updateDeadline(); updateCrew(); }));
   try { S.me = await api.getMyName(user.uid); } catch { S.me = null; }
   if (S.me) enterDashboard(); else renderPicker();
+  setTimeout(spamTip, 1800);
 });
+
+// One-time popup so reminder emails don't end up in spam
+const SENDER = "alphadeltasecretsanta@gmail.com";
+function spamTip() {
+  if (!S.user || store.get("ss-spam-tip") === "1") return;
+  const q = encodeURIComponent(`from:${SENDER} in:spam`);
+  const gmail = `https://mail.google.com/mail/?authuser=${encodeURIComponent(S.user.email || "")}#search/${q}`;
+  openModal(`
+    <h2>${icon("bell")} Don't miss the elves</h2>
+    <p>Reminders and your match come from:</p>
+    <p class="spam-addr">${SENDER}</p>
+    <p>New addresses often land in spam, so take 10 seconds to fix it:</p>
+    <ol class="spam-steps">
+      <li>Tap <b>Check my spam</b> and mark any Secret Santa emails <b>Not spam</b>.</li>
+      <li>Tap <b>Copy email</b> and add it to your contacts.</li>
+    </ol>
+    <div class="spam-btns">
+      <a class="btn primary" href="${gmail}" target="_blank" rel="noopener">${icon("search")} Check my spam</a>
+      <button class="btn ghost" id="spam-copy">${icon("tag")} Copy email</button>
+      <button class="btn ghost" data-close>Done</button>
+    </div>`, () => store.set("ss-spam-tip", "1"));
+  $("#spam-copy").onclick = async () => {
+    try { await navigator.clipboard.writeText(SENDER); toast("Email copied", "", "check"); }
+    catch { toast(SENDER); }
+  };
+}
 
 function renderUserChip() {
   const u = S.user;
