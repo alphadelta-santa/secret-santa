@@ -1,7 +1,7 @@
 // Live data layer: Firebase Auth (Google) + Firestore.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getAuth, GoogleAuthProvider, signInWithPopup, signOut as fbSignOut, onAuthStateChanged,
+  getAuth, GoogleAuthProvider, signInWithPopup, signInWithCredential, signOut as fbSignOut, onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection,
@@ -23,6 +23,12 @@ export async function signIn() {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
   await signInWithPopup(auth, provider);
+}
+
+// Google's own sign-in button hands us an ID token directly (much faster on iPhone)
+export const GOOGLE_CLIENT_ID = "290887329772-ci7csda0l41sm6lueknv6mf11e1129uv.apps.googleusercontent.com";
+export async function signInWithIdToken(idToken) {
+  await signInWithCredential(auth, GoogleAuthProvider.credential(idToken));
 }
 
 export const signOut = () => fbSignOut(auth);
