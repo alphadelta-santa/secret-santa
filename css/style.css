@@ -729,7 +729,8 @@ input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer
   filter: drop-shadow(0 6px 24px rgba(0, 0, 0, .45)); }
 .intro-sub { margin: 0; color: #dbe6ff; font-size: clamp(16px, 2vw, 19px); font-weight: 300; }
 .intro-bottom .btn { pointer-events: auto; }
-#intro-open { animation: pulseBtn 1.8s ease-in-out infinite; }
+#intro-open { animation: pulseG 2s ease-in-out infinite; }
+@keyframes pulseG { 50% { box-shadow: 0 10px 30px rgba(0, 0, 0, .35), 0 0 0 12px rgba(255, 255, 255, .14), 0 0 34px rgba(255, 255, 255, .35); } }
 @keyframes pulseBtn { 50% { box-shadow: 0 0 0 12px rgba(255, 59, 92, .18), 0 8px 24px rgba(255, 59, 92, .45); } }
 .intro-hint { margin: 0; font-size: 13px; color: #dbe6ff; text-shadow: 0 1px 6px rgba(0,0,0,.8); display: inline-flex; gap: 6px; align-items: center; }
 .intro-hint::before { content: ""; width: 18px; height: 18px; border: 2px solid currentColor; border-radius: 50%; border-left-color: transparent; animation: spin 2s linear infinite; }
@@ -988,7 +989,7 @@ input.invalid { border-color: #ff4d6d !important; box-shadow: 0 0 0 4px rgba(255
 .field-err[hidden] { display: none; }
 
 /* 13: toasts stay small and out of the way */
-#toasts { bottom: max(18px, env(safe-area-inset-bottom)); width: min(420px, 92vw); }
+#toasts { bottom: max(18px, env(safe-area-inset-bottom)); width: min(420px, 92vw); z-index: 450; }
 .toast { max-width: 100%; text-align: left; line-height: 1.35; }
 @media (max-width: 600px) { .toast { font-size: 14px; padding: 10px 16px; border-radius: 16px; } }
 
