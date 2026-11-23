@@ -1048,3 +1048,9 @@ html.plain .sreel.side .face .i { filter: none; }
 .slot-ov.suspense .slot-machine, .slot-ov.win .slot-machine { animation: none; }
 .sreel.locked, .sreel.main.nudge { animation: none; transform: none; }
 .slot-ov.win .sreel.locked { animation: winReel .5s ease-in-out 3 .2s; }
+
+/* spam tip popup */
+.spam-addr { color: var(--gold); font-weight: 700; font-size: 15px; overflow-wrap: anywhere; margin: -4px 0 10px; }
+.spam-steps { margin: 4px 0 18px; padding-left: 20px; line-height: 1.6; }
+.spam-btns { display: flex; flex-wrap: wrap; gap: 10px; }
+.spam-btns .btn { text-decoration: none; }
