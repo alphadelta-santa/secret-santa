@@ -1040,3 +1040,11 @@ html.mobile .slot-ov.win .bulbs i { animation: winBulbsLite .25s steps(2) infini
 html.mobile .sm-sign span { animation: none; text-shadow: 0 0 6px #fff, 0 0 16px #ff3b8a; }
 html.mobile .sreel.side .face .i { filter: none; }
 html.mobile .slot-ov.win .sreel.locked { animation: lockBounce .45s; }
+
+/* slot reels: flat strips that slide smoothly, no shaking or bouncing */
+.sreel { perspective: none; }
+.drum { inset: auto; left: 0; right: 0; top: 0; transform-style: flat; }
+.face { top: 0; backface-visibility: visible; }
+.slot-ov.suspense .slot-machine, .slot-ov.win .slot-machine { animation: none; }
+.sreel.locked, .sreel.main.nudge { animation: none; transform: none; }
+.slot-ov.win .sreel.locked { animation: winReel .5s ease-in-out 3 .2s; }
