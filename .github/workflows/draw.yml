@@ -41,6 +41,6 @@ jobs:
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           SITE_URL: ${{ secrets.SITE_URL }}
           TIMEZONE: America/New_York
-          WISHLIST_DEADLINE: "2026-12-01"
+          WISHLIST_DEADLINE: "2026-11-27"
           DEFAULT_BUDGET: "35"
           EVENT_DATE: "2026-12-11"
