@@ -16,5 +16,5 @@ export const ADMIN_EMAILS = ["rlewisbangerter@gmail.com"];
 export const DEFAULTS = {
   date: "2026-12-11",             // event day (YYYY-MM-DD, or YYYY-MM-DDTHH:MM for a time)
   budget: 35,                     // dollars per gift
-  wishlistDeadline: "2026-12-01", // YYYY-MM-DD
+  wishlistDeadline: "2026-11-27", // YYYY-MM-DD
 };
