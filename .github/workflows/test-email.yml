@@ -1,0 +1,37 @@
+name: Send test email
+
+on:
+  workflow_dispatch:
+    inputs:
+      to:
+        description: "Email address to send the test to"
+        required: true
+        default: "rlewisbangerter@gmail.com"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install
+        working-directory: scripts
+        run: npm install --no-audit --no-fund
+      - name: Send
+        working-directory: scripts
+        run: node test-email.mjs
+        env:
+          TEST_TO: ${{ inputs.to }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          TIMEZONE: America/New_York
+          WISHLIST_DEADLINE: "2026-11-27"
+          DEFAULT_BUDGET: "35"
+          EVENT_DATE: "2026-12-11"
