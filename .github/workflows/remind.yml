@@ -1,0 +1,43 @@
+name: Send reminders
+
+on:
+  # Runs every day around 10am New York time (15:00 UTC).
+  # The script decides what to send: wishlist nudges Mon/Thu and daily in the
+  # last 3 days before the deadline; gift nudges Mon/Thu after the draw.
+  schedule:
+    - cron: "0 15 * * *"
+  workflow_dispatch:
+    inputs:
+      message:
+        description: "Optional custom message (manual runs send right away)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install
+        working-directory: scripts
+        run: npm install --no-audit --no-fund
+      - name: Send
+        working-directory: scripts
+        run: node remind.mjs
+        env:
+          MESSAGE: ${{ inputs.message }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          ROSTER_EMAILS: ${{ secrets.ROSTER_EMAILS }}
+          TIMEZONE: America/New_York
+          WISHLIST_DEADLINE: "2026-12-01"
+          DEFAULT_BUDGET: "35"
+          EVENT_DATE: "2026-12-11"

@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://apis.google.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com; frame-src https://*.firebaseapp.com https://accounts.google.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="theme-color" content="#070b1f">
+  <title>Secret Santa</title>
+  <meta name="description" content="Our Secret Santa: claim your name, build your wishlist, find out who you're shopping for.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='12' width='24' height='17' rx='3' fill='%23ff3b5c'/%3E%3Crect x='2' y='8' width='28' height='7' rx='2' fill='%23c1121f'/%3E%3Cpath d='M14 8h4v21h-4z' fill='%23ffd166'/%3E%3Cpath d='M16 8c-3-6-9-5-7-1 1 2 4 1 7 1zm0 0c3-6 9-5 7-1-1 2-4 1-7 1z' fill='%23ffd166'/%3E%3C/svg%3E">
+  <link rel="preload" href="fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/outfit.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="sky" aria-hidden="true">
+    <canvas id="aurora"></canvas>
+    <div class="aurora a1"></div><div class="aurora a2"></div><div class="aurora a3"></div>
+    <div class="stars"></div>
+  </div>
+  <canvas id="snow" aria-hidden="true"></canvas>
+  <div class="village" id="village"></div>
+
+  <ul class="lights" id="lights" aria-hidden="true"></ul>
+
+  <header class="topbar">
+    <div class="brand"><span>Secret Santa</span></div>
+    <div class="top-actions">
+      <button class="icon-btn" id="mute-btn" aria-label="Mute sound effects"></button>
+      <button class="icon-btn" id="sound-btn" aria-pressed="false" aria-label="Music box"></button>
+      <div class="user-chip" id="user-chip"></div>
+    </div>
+  </header>
+
+  <main id="app"><div class="loader"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M3.3 7l17.4 10M3.3 17 20.7 7"/></svg></div></main>
+
+  <footer class="foot"><span class="foot-pill">Made with <span id="foot-ico"></span> and elf magic <span class="psst">· psst: type <b>let it snow</b> or <b>hohoho</b></span> · <button class="linkish" id="replay-intro">Replay intro</button></span></footer>
+
+  <div class="frost" aria-hidden="true"></div>
+
+  <div id="intro" class="intro" hidden>
+    <button class="intro-skip" id="intro-skip">Skip intro</button>
+    <div class="intro-ui">
+      <div class="intro-top">
+        <span class="intro-kicker">North Pole Post · Winter 2026</span>
+        <h1 class="intro-title">Secret Santa</h1>
+        <p class="intro-sub">A tiny planet, and a whole lot of gifts to deliver.</p>
+      </div>
+      <div class="intro-bottom">
+        <button class="btn primary big" id="intro-open">Enter the workshop</button>
+        <p class="intro-hint">Drag to spin the planet</p>
+      </div>
+    </div>
+    <div class="intro-loading"><span></span>Loading the North Pole…</div>
+  </div>
+
+  <div id="modal" class="modal hidden"></div>
+  <div id="toasts" aria-live="polite"></div>
+  <canvas id="fx" aria-hidden="true"></canvas>
+
+  <noscript><p style="text-align:center;padding:40px">Turn on JavaScript to join the fun</p></noscript>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

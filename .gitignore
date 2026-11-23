@@ -1,0 +1,6 @@
+node_modules/
+# Never commit your Firebase service account key
+*service-account*.json
+*serviceAccount*.json
+*-firebase-adminsdk-*.json
+.env

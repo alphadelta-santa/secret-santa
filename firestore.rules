@@ -1,0 +1,101 @@
+rules_version = '2';
+
+// Paste this into Firebase console > Firestore Database > Rules, then Publish.
+// Replace your.email@gmail.com with the organizer's Google email (same as js/firebase-config.js).
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isAdmin() {
+      return signedIn()
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in ['your.email@gmail.com'];
+    }
+    function names() {
+      return ['Anjali','Arun','Arvind','Aryan','Dheeraj','Kavya','Diya','Lucas','Noam',
+              'Reuben','Rebecca','Priscilla','Yashvi','Vagheesan','William','Sam','Shawn','Siya'];
+    }
+    function userDoc(uid) { return /databases/$(database)/documents/users/$(uid); }
+    function hasClaim() { return exists(userDoc(request.auth.uid)); }
+    function myName() { return get(userDoc(request.auth.uid)).data.name; }
+    function okStr(p, k, n) { return !(k in p) || (p[k] is string && p[k].size() <= n); }
+    function okProfile(p) {
+      return p is map
+        && p.keys().hasOnly(['interests', 'colors', 'treats', 'stores', 'shirt', 'shoe', 'avoid', 'notes'])
+        && (!('interests' in p) || (p.interests is list && p.interests.size() <= 15))
+        && okStr(p, 'colors', 120) && okStr(p, 'treats', 200) && okStr(p, 'stores', 200)
+        && okStr(p, 'shirt', 20) && okStr(p, 'shoe', 20) && okStr(p, 'avoid', 200) && okStr(p, 'notes', 500);
+    }
+    function joinCode() { return get(/databases/$(database)/documents/private/settings).data.joinCode; }
+
+    // Event details: everyone signed in can read, only the admin can edit.
+    match /config/event {
+      allow read: if signedIn();
+      allow write: if isAdmin();
+    }
+
+    // Group code: never readable by regular users.
+    match /private/{doc} {
+      allow read, write: if isAdmin();
+    }
+
+    // Who owns which name. Created together with /people/{name} in one transaction.
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name', 'email', 'joinCode', 'createdAt'])
+        && request.resource.data.name in names()
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.joinCode == joinCode()
+        && request.resource.data.createdAt == request.time
+        && getAfter(/databases/$(database)/documents/people/$(request.resource.data.name)).data.uid == uid;
+      // You may only record what you spent (private to you).
+      allow update: if signedIn() && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['spent'])
+        && (request.resource.data.spent == null
+            || (request.resource.data.spent is number && request.resource.data.spent >= 0 && request.resource.data.spent <= 10000));
+      allow delete: if isAdmin();
+    }
+
+    // Public "who has joined / who bought" board. No emails here.
+    match /people/{name} {
+      allow read: if signedIn();
+      allow create: if signedIn() && name in names()
+        && !hasClaim()
+        && request.resource.data.keys().hasOnly(['uid', 'bought', 'claimedAt', 'photo'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.bought == false
+        && request.resource.data.claimedAt == request.time
+        && (!('photo' in request.resource.data) || (request.resource.data.photo is string && request.resource.data.photo.size() < 900))
+        && getAfter(userDoc(request.auth.uid)).data.name == name;
+      // Owner may only flip their own "bought" flag.
+      allow update: if signedIn() && resource.data.uid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['bought'])
+        && request.resource.data.bought is bool;
+      allow delete: if isAdmin();
+    }
+
+    // Wishlists + "About me" profiles: anyone in the group can read, only the owner can write.
+    match /wishlists/{name} {
+      allow read: if signedIn() && hasClaim();
+      allow write: if signedIn() && hasClaim() && myName() == name
+        && request.resource.data.keys().hasOnly(['items', 'profile', 'updatedAt'])
+        && request.resource.data.items is list
+        && request.resource.data.items.size() <= 30
+        && (!('profile' in request.resource.data) || okProfile(request.resource.data.profile));
+    }
+
+    // Secret pairs: written only by the GitHub Action (server). You can read ONLY your own.
+    // Not even the admin can read these.
+    match /assignments/{giver} {
+      allow read: if signedIn() && hasClaim() && myName() == giver;
+      allow write: if false;
+    }
+
+    // Everything else is locked.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

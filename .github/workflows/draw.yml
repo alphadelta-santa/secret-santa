@@ -1,0 +1,46 @@
+name: Draw names
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type DRAW to confirm"
+        required: true
+      redraw:
+        description: "Start over (wipes old pairs and bought flags)"
+        type: boolean
+        default: false
+      send_email:
+        description: "Email everyone who has joined"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  draw:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install
+        working-directory: scripts
+        run: npm install --no-audit --no-fund
+      - name: Draw
+        working-directory: scripts
+        run: node draw.mjs
+        env:
+          CONFIRM: ${{ inputs.confirm }}
+          REDRAW: ${{ inputs.redraw }}
+          SEND_EMAIL: ${{ inputs.send_email }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          SITE_URL: ${{ secrets.SITE_URL }}
+          TIMEZONE: America/New_York
+          WISHLIST_DEADLINE: "2026-12-01"
+          DEFAULT_BUDGET: "35"
+          EVENT_DATE: "2026-12-11"
