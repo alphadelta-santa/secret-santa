@@ -19,7 +19,7 @@ export function initFirebase() {
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 export const DEFAULT_BUDGET = Number(process.env.DEFAULT_BUDGET || 35);
-export const DEFAULT_DEADLINE = process.env.WISHLIST_DEADLINE || "2026-12-01";
+export const DEFAULT_DEADLINE = process.env.WISHLIST_DEADLINE || "2026-11-27";
 export const deadlineOf = (ev) => ev?.wishlistDeadline || DEFAULT_DEADLINE;
 
 // Calendar math in New York time
