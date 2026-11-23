@@ -6,9 +6,7 @@ const SYMBOLS = [
   ["gift", "#ff3b5c"], ["tree", "#22c55e"], ["star", "#ffd166"], ["bell", "#ffb020"], ["candy", "#ff5c8a"],
   ["snowflake", "#4cc9f0"], ["sled", "#c77dff"], ["heart", "#ff3b5c"], ["sparkles", "#ffd166"], ["tree", "#22c55e"],
 ];
-const N = 10, STEP = 360 / N;
 const easeOut = (t) => 1 - Math.pow(1 - t, 4);
-const phone = document.documentElement.classList.contains("mobile");
 
 export function runSlot({ names, me, recipient, fx }) {
   return new Promise((resolve) => {
@@ -56,39 +54,46 @@ export function runSlot({ names, me, recipient, fx }) {
     document.body.classList.add("slot-on");
     requestAnimationFrame(() => ov.classList.add("in"));
 
-    // ---- build reels ----
+    // ---- build reels: flat strips that slide straight down, like a real slot machine ----
     const drums = [...ov.querySelectorAll(".drum")];
-    const faceH = () => drums[1].parentElement.clientHeight * 0.42;
+    // strip lengths: the middle reel (names) runs longest. Item 1 is where each reel lands.
+    const COUNT = [22, 42, 30];
     const reels = drums.map((drum, r) => {
       const faces = [];
-      for (let i = 0; i < N; i++) {
+      for (let i = 0; i < COUNT[r]; i++) {
         const f = document.createElement("div");
         f.className = "face";
-        if (r === 1) setName(f, pick());
-        else { const [ic, col] = SYMBOLS[(i + r * 3) % SYMBOLS.length]; f.innerHTML = icon(ic); f.style.color = col; f.dataset.sym = ic; }
+        if (r === 1) {
+          // no name shows twice in a row
+          let n = i === 1 ? recipient : pick();
+          while (i !== 1 && pool.length > 2 && (n === faces[i - 1]?.textContent || (i === 0 && n === recipient) || (i === 2 && n === recipient))) n = pick();
+          setName(f, n);
+        }
+        else { const [ic, col] = i === 1 ? SYMBOLS[0] : SYMBOLS[(i + r * 3) % SYMBOLS.length]; f.innerHTML = icon(ic); f.style.color = col; }
         drum.appendChild(f);
         faces.push(f);
       }
-      return { drum, faces, angle: 0, target: 0, stopped: true, lastTick: 0, landing: 0 };
+      // start near the bottom of the strip; spinning moves toward item 1 so names roll downward
+      return { drum, faces, pos: COUNT[r] - 2, stopped: true };
     });
+    let itemH = 60, reelH = 150;
     const layout = () => {
       reelW = drums[1].parentElement.clientWidth || 300;
-      reels[1]?.faces.forEach((f) => setName(f, f.textContent));
-      const h = faceH(), rad = h / 2 / Math.tan(Math.PI / N);
-      reels.forEach((rl) => rl.faces.forEach((f, i) => {
-        f.style.height = `${h}px`;
-        f.style.marginTop = `${-h / 2}px`;
-        f.style.transform = `rotateX(${i * STEP}deg) translateZ(${rad}px)`;
+      reelH = drums[1].parentElement.clientHeight || 150;
+      itemH = reelH * 0.42;
+      reels.forEach((rl, r) => rl.faces.forEach((f, i) => {
+        f.style.height = `${itemH}px`;
+        f.style.top = `${i * itemH}px`;
+        if (r === 1) setName(f, f.textContent);
       }));
+      reels.forEach(render);
     };
+    function render(rl) {
+      const y = reelH / 2 - (rl.pos * itemH + itemH / 2);
+      rl.drum.style.transform = `translate3d(0, ${y.toFixed(2)}px, 0)`;
+    }
     layout();
     addEventListener("resize", layout);
-    const render = (rl, blur) => {
-      rl.drum.style.transform = `rotateX(${rl.angle}deg)`;
-      // motion blur is too heavy for phones, so they skip it
-      if (!phone) rl.drum.style.filter = blur > 0.3 ? `blur(${Math.min(3.5, blur * 3)}px)` : "none";
-    };
-    reels.forEach((rl) => render(rl, 0));
 
     // ---- lever ----
     const lever = ov.querySelector(".lever"), rod = ov.querySelector(".lever-rod");
@@ -130,26 +135,16 @@ export function runSlot({ names, me, recipient, fx }) {
       ov.classList.add("spinning");
       const whir = fx.slotSfx.whir();
       const now = performance.now();
-      const plan = [
-        { dur: 2300, turns: 5, land: 0 },              // left: gift
-        { dur: 5600, turns: 11, land: 3 },             // middle: the name (face 3)
-        { dur: 3200, turns: 7, land: 0 },              // right: gift
-      ];
+      const DUR = [2600, 5200, 3600];
       reels.forEach((rl, r) => {
-        const p = plan[r];
         rl.start = now + r * 120;
-        rl.dur = p.dur;
-        rl.from = 0;
-        rl.landing = p.land;
-        rl.to = -(p.land * STEP) - 360 * p.turns;   // negative = names roll downward
+        rl.dur = DUR[r];
+        rl.from = rl.pos;
+        rl.to = 1;
         rl.stopped = false;
-        rl.lastIdx = 0;
-        if (r !== 1) {
-          const [ic, col] = SYMBOLS[0];
-          rl.faces[p.land].innerHTML = icon(ic); rl.faces[p.land].style.color = col;
-        }
+        rl.lastIdx = Math.round(rl.pos);
       });
-      let drum = false;
+      let drumroll = false;
       const tick = () => {
         const t = performance.now();
         let maxSpeed = 0, allDone = true;
@@ -157,43 +152,26 @@ export function runSlot({ names, me, recipient, fx }) {
           if (rl.stopped) return;
           allDone = false;
           const k = Math.max(0, Math.min(1, (t - rl.start) / rl.dur));
-          // middle reel: extra-slow crawl at the end for suspense
-          const e = r === 1 ? (k < 0.82 ? easeOut(k / 0.82) * 0.985 : 0.985 + 0.015 * easeOut((k - 0.82) / 0.18)) : easeOut(k);
-          const prev = rl.angle;
-          rl.angle = rl.from + (rl.to - rl.from) * e;
-          const speed = Math.abs(rl.angle - prev) / 30;
-          maxSpeed = Math.max(maxSpeed, speed);
-          // keep the middle reel "infinite": swap names on faces while they're hidden at the back
-          if (r === 1) {
-            const remaining = Math.abs(rl.to - rl.angle);
-            rl.faces.forEach((f, i) => {
-              const rel = (((i * STEP + rl.angle) % 360) + 360) % 360;
-              const atBack = rel > 130 && rel < 230;
-              if (!atBack) return;
-              if (i === rl.landing && remaining < 300) { if (f.textContent !== recipient) setName(f, recipient); }
-              else if (f.dataset.back !== "1") setName(f, pick());
-              f.dataset.back = "1";
-            });
-            rl.faces.forEach((f, i) => { const rel = (((i * STEP + rl.angle) % 360) + 360) % 360; if (rel < 100 || rel > 260) f.dataset.back = "0"; });
-          }
-          const idx = Math.floor(-rl.angle / STEP);
+          const prev = rl.pos;
+          rl.pos = rl.from + (rl.to - rl.from) * easeOut(k);
+          const speed = Math.abs(rl.pos - prev);
+          maxSpeed = Math.max(maxSpeed, Math.min(1, speed * 2));
+          const idx = Math.round(rl.pos);
           if (idx !== rl.lastIdx) {
             rl.lastIdx = idx;
-            if (r === 1 || speed < 0.5) fx.slotSfx.tick(Math.min(1, speed), r === 1 ? 1 + (1 - Math.min(1, speed)) * 0.5 : 0.8);
-            if (r === 1 && speed < 0.25) rl.drum.parentElement.classList.toggle("nudge");
+            if (r === 1 || speed < 0.25) fx.slotSfx.tick(Math.min(1, speed * 2), r === 1 ? 1.2 : 0.8);
           }
-          render(rl, speed);
-          if (r === 1 && !drum && k > 0.55) { drum = true; fx.slotSfx.drumroll((rl.dur * 0.45) / 1000); ov.classList.add("suspense"); }
+          render(rl);
+          if (r === 1 && !drumroll && k > 0.55) { drumroll = true; fx.slotSfx.drumroll((rl.dur * 0.45) / 1000); }
           if (k >= 1) {
             rl.stopped = true;
-            rl.angle = rl.to;
-            render(rl, 0);
+            rl.pos = rl.to;
+            render(rl);
             rl.drum.parentElement.classList.add("locked");
             fx.slotSfx.stop(r === 1);
-            if (r !== 1) fx.sleighShake(3, 0.06);
           }
         });
-        whir?.set?.(Math.min(1, maxSpeed));
+        whir?.set?.(maxSpeed);
         if (!allDone) requestAnimationFrame(tick);
         else { whir?.stop?.(); win(); }
       };
@@ -202,7 +180,7 @@ export function runSlot({ names, me, recipient, fx }) {
 
     // ---- jackpot ----
     function win() {
-      ov.classList.remove("spinning", "suspense");
+      ov.classList.remove("spinning");
       ov.classList.add("win");
       fx.flash();
       fx.slotSfx.jackpot();
