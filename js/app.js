@@ -154,7 +154,6 @@ $("#mute-btn").addEventListener("click", () => {
   syncSoundBtns();
   if (sound.on) { sleighShake(5, 0.1); toast("Sound on", "", "volume"); }
 });
-$("#foot-ico").innerHTML = icon("tree");
 $("#sound-btn").addEventListener("click", (e) => {
   if (sound.music) stopMusic();
   else { if (!sound.on) setSfx(true); startMusic(); toast("Music box on", "", "music"); }
