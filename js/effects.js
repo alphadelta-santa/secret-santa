@@ -9,7 +9,10 @@ const fine = matchMedia("(pointer: fine)").matches;
 // Phones and tablets: no fireworks, confetti or sound, and a lighter background
 export const mobile = !fine || innerWidth < 700;
 if (mobile) document.documentElement.classList.add("mobile");
-const DPR = mobile ? 1 : Math.min(window.devicePixelRatio || 1, 2);
+// Simple visuals everywhere (no fireworks, confetti, aurora or blur) so it stays smooth
+const plain = true;
+if (plain) document.documentElement.classList.add("plain");
+const DPR = plain ? 1 : Math.min(window.devicePixelRatio || 1, 2);
 const rand = (a, b) => a + Math.random() * (b - a);
 const root = document.documentElement;
 
@@ -433,7 +436,7 @@ function stars() {
   }
 }
 function shootingStars() {
-  if (reduce || mobile) return;
+  if (reduce || plain) return;
   const go = () => {
     const s = document.createElement("div");
     s.className = "shoot";
@@ -446,7 +449,7 @@ function shootingStars() {
   setTimeout(go, 2500);
 }
 function parallax() {
-  if (reduce || !fine) return;
+  if (reduce || !fine || plain) return;
   addEventListener("pointermove", (e) => {
     root.style.setProperty("--px", ((e.clientX / innerWidth) * 2 - 1).toFixed(3));
     root.style.setProperty("--py", ((e.clientY / innerHeight) * 2 - 1).toFixed(3));
@@ -553,7 +556,7 @@ function snow(canvas) {
     canvas.width = W * DPR; canvas.height = H * DPR;
     canvas.style.width = W + "px"; canvas.style.height = H + "px";
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    base = Math.round(Math.min(reduce ? 60 : mobile ? 45 : lite ? 90 : 220, (W * H) / (lite ? 9000 : 7000)));
+    base = Math.round(Math.min(reduce ? 60 : mobile ? 45 : plain ? 90 : lite ? 90 : 220, (W * H) / (lite ? 9000 : 7000)));
   }
   addEventListener("pointermove", (e) => {
     targetWind = (e.clientX / W - 0.5) * 2.4;
@@ -682,7 +685,7 @@ function fxInit() {
 const CONF = ["#ff3b5c", "#22c55e", "#ffd166", "#ffffff", "#4cc9f0", "#c77dff"];
 const FW = [["#ff3b5c", "#ff8fab"], ["#ffd166", "#fff3c4"], ["#22c55e", "#b7f7cf"], ["#4cc9f0", "#d4f3ff"], ["#c77dff", "#f0d9ff"], ["#ffffff", "#ffd166"]];
 function burst(x, y, n, kind, opts = {}) {
-  if (mobile) return;
+  if (plain) return;
   for (let i = 0; i < n; i++) {
     const a = Math.random() * Math.PI * 2;
     if (kind === "spark") {
@@ -709,7 +712,7 @@ function burst(x, y, n, kind, opts = {}) {
   if (!running) { running = true; requestAnimationFrame(loop); }
 }
 function launch(x, ty) {
-  if (mobile) return;
+  if (plain) return;
   const H = innerHeight;
   const vy = -Math.sqrt(2 * 0.24 * (H - ty));
   parts.push({ kind: "rocket", x, y: H + 10, vx: rand(-0.8, 0.8), vy, g: 0.24, life: 1, decay: 0, c: FW[Math.floor(Math.random() * FW.length)] });
@@ -809,7 +812,7 @@ export function fireworks(n = 4) {
   for (let i = 0; i < n; i++) setTimeout(() => launch(rand(0.15, 0.85) * innerWidth, rand(0.12, 0.42) * innerHeight), i * rand(220, 420));
 }
 export function flash() {
-  if (mobile) return;
+  if (plain) return;
   const f = document.createElement("div");
   f.className = "flash";
   f.addEventListener("animationend", () => f.remove());
@@ -881,7 +884,7 @@ export function tilt(el) {
 // =====================================================================
 function aurora() {
   const cv = document.getElementById("aurora");
-  if (!cv || mobile) return;
+  if (!cv || plain) return;
   const ctx = cv.getContext("2d");
   const S = 0.5;
   let W, H, t = 0;
@@ -1035,7 +1038,7 @@ export async function showPlanet({ onSignIn } = {}) {
       // Render the planet at a lower resolution on phones so it stays smooth
       const realDpr = Object.getOwnPropertyDescriptor(window, "devicePixelRatio");
       let swapped = false;
-      if (mobile) try { Object.defineProperty(window, "devicePixelRatio", { value: 1.25, configurable: true }); swapped = true; } catch {}
+      try { Object.defineProperty(window, "devicePixelRatio", { value: mobile ? 1.25 : Math.min(1.5, realDpr?.get?.call(window) ?? window.devicePixelRatio), configurable: true }); swapped = true; } catch {}
       try { planet = m.startIntro3D(el, { sounds: { grab: () => sleighShake(2, 0.05) } }); }
       finally { if (swapped) try { delete window.devicePixelRatio; if (realDpr) Object.defineProperty(window, "devicePixelRatio", realDpr); } catch {} }
     } catch (err) {
