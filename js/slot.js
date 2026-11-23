@@ -8,6 +8,7 @@ const SYMBOLS = [
 ];
 const N = 10, STEP = 360 / N;
 const easeOut = (t) => 1 - Math.pow(1 - t, 4);
+const phone = document.documentElement.classList.contains("mobile");
 
 export function runSlot({ names, me, recipient, fx }) {
   return new Promise((resolve) => {
@@ -84,7 +85,8 @@ export function runSlot({ names, me, recipient, fx }) {
     addEventListener("resize", layout);
     const render = (rl, blur) => {
       rl.drum.style.transform = `rotateX(${rl.angle}deg)`;
-      rl.drum.style.filter = blur > 0.3 ? `blur(${Math.min(3.5, blur * 3)}px)` : "none";
+      // motion blur is too heavy for phones, so they skip it
+      if (!phone) rl.drum.style.filter = blur > 0.3 ? `blur(${Math.min(3.5, blur * 3)}px)` : "none";
     };
     reels.forEach((rl) => render(rl, 0));
 
