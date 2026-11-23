@@ -1,17 +1,16 @@
-// 1) Paste your Firebase web config here (Firebase console > Project settings > Your apps).
-//    These values are meant to be public. Security comes from firestore.rules, not from hiding this.
-// 2) Put the organizer's Google email in ADMIN_EMAILS (and in firestore.rules).
-//
-// While apiKey still says PASTE, the site runs in PREVIEW MODE with fake data.
+// Firebase web config for the live site. These values are meant to be public:
+// security comes from firestore.rules, not from hiding this.
 
 export const firebaseConfig = {
-  apiKey: "PASTE_YOUR_API_KEY",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project",
-  appId: "PASTE_YOUR_APP_ID",
+  apiKey: "AIzaSyB2EMdwvOcbuX9YYxoQGLSSeUeOTebeO-4",
+  authDomain: "alphadelta-secret-santa.firebaseapp.com",
+  projectId: "alphadelta-secret-santa",
+  storageBucket: "alphadelta-secret-santa.firebasestorage.app",
+  messagingSenderId: "290887329772",
+  appId: "1:290887329772:web:efd682828105c81f9d42c9",
 };
 
-export const ADMIN_EMAILS = ["your.email@gmail.com"];
+export const ADMIN_EMAILS = ["rlewisbangerter@gmail.com"];
 
 // Used until the organizer changes them in the Admin tab.
 export const DEFAULTS = {
