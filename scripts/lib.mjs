@@ -85,7 +85,9 @@ export async function sendAll(list, build) {
   for (const u of list) {
     try {
       const m = build(u);
-      await t.sendMail({ from: `"Secret Santa" <${process.env.GMAIL_USER}>`, to: u.email, ...m });
+      // a plain-text copy alongside the HTML helps keep emails out of spam
+      const text = (m.html || "").replace(/<br\s*\/?>/gi, "\n").replace(/<\/(p|tr|h1)>/gi, "\n\n").replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&#9733;/g, "").replace(/\n{3,}/g, "\n\n").trim();
+      await t.sendMail({ from: `"Secret Santa" <${process.env.GMAIL_USER}>`, to: u.email, text, ...m });
       ok++;
     } catch (e) {
       fail++;
