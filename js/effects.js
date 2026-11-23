@@ -6,7 +6,10 @@ const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
 // lighter effects on phones / low-power devices to save battery
 const lite = innerWidth < 700 || (navigator.hardwareConcurrency || 8) <= 4 || navigator.connection?.saveData === true;
 const fine = matchMedia("(pointer: fine)").matches;
-const DPR = Math.min(window.devicePixelRatio || 1, 2);
+// Phones and tablets: no fireworks, confetti or sound, and a lighter background
+export const mobile = !fine || innerWidth < 700;
+if (mobile) document.documentElement.classList.add("mobile");
+const DPR = mobile ? 1 : Math.min(window.devicePixelRatio || 1, 2);
 const rand = (a, b) => a + Math.random() * (b - a);
 const root = document.documentElement;
 
@@ -14,9 +17,10 @@ const root = document.documentElement;
 // SOUND: bells, pops and a music-box carol (all synthesized, off by default)
 // =====================================================================
 const saved = (() => { try { return localStorage.getItem("ss-sfx"); } catch { return null; } })();
-export const sound = { on: saved !== "off", music: false, ctx: null, bus: null };
-export function setSfx(on) { sound.on = on; try { localStorage.setItem("ss-sfx", on ? "on" : "off"); } catch {} if (!on) stopMusic(); }
+export const sound = { on: !mobile && saved !== "off", music: false, ctx: null, bus: null };
+export function setSfx(on) { sound.on = on && !mobile; try { localStorage.setItem("ss-sfx", on ? "on" : "off"); } catch {} if (!on) stopMusic(); }
 function ac() {
+  if (mobile) return null;
   if (!sound.ctx) {
     const c = (sound.ctx = new (window.AudioContext || window.webkitAudioContext)());
     const comp = c.createDynamicsCompressor();
@@ -376,6 +380,7 @@ function padChord(root, t, dur) {
   }));
 }
 export function startMusic() {
+  if (mobile) return;
   sound.music = true;
   if (music.timer || reduce) return;
   const c = ac();
@@ -428,7 +433,7 @@ function stars() {
   }
 }
 function shootingStars() {
-  if (reduce) return;
+  if (reduce || mobile) return;
   const go = () => {
     const s = document.createElement("div");
     s.className = "shoot";
@@ -548,7 +553,7 @@ function snow(canvas) {
     canvas.width = W * DPR; canvas.height = H * DPR;
     canvas.style.width = W + "px"; canvas.style.height = H + "px";
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    base = Math.round(Math.min(reduce ? 60 : lite ? 90 : 220, (W * H) / (lite ? 9000 : 7000)));
+    base = Math.round(Math.min(reduce ? 60 : mobile ? 45 : lite ? 90 : 220, (W * H) / (lite ? 9000 : 7000)));
   }
   addEventListener("pointermove", (e) => {
     targetWind = (e.clientX / W - 0.5) * 2.4;
@@ -677,6 +682,7 @@ function fxInit() {
 const CONF = ["#ff3b5c", "#22c55e", "#ffd166", "#ffffff", "#4cc9f0", "#c77dff"];
 const FW = [["#ff3b5c", "#ff8fab"], ["#ffd166", "#fff3c4"], ["#22c55e", "#b7f7cf"], ["#4cc9f0", "#d4f3ff"], ["#c77dff", "#f0d9ff"], ["#ffffff", "#ffd166"]];
 function burst(x, y, n, kind, opts = {}) {
+  if (mobile) return;
   for (let i = 0; i < n; i++) {
     const a = Math.random() * Math.PI * 2;
     if (kind === "spark") {
@@ -703,6 +709,7 @@ function burst(x, y, n, kind, opts = {}) {
   if (!running) { running = true; requestAnimationFrame(loop); }
 }
 function launch(x, ty) {
+  if (mobile) return;
   const H = innerHeight;
   const vy = -Math.sqrt(2 * 0.24 * (H - ty));
   parts.push({ kind: "rocket", x, y: H + 10, vx: rand(-0.8, 0.8), vy, g: 0.24, life: 1, decay: 0, c: FW[Math.floor(Math.random() * FW.length)] });
@@ -802,6 +809,7 @@ export function fireworks(n = 4) {
   for (let i = 0; i < n; i++) setTimeout(() => launch(rand(0.15, 0.85) * innerWidth, rand(0.12, 0.42) * innerHeight), i * rand(220, 420));
 }
 export function flash() {
+  if (mobile) return;
   const f = document.createElement("div");
   f.className = "flash";
   f.addEventListener("animationend", () => f.remove());
@@ -873,7 +881,7 @@ export function tilt(el) {
 // =====================================================================
 function aurora() {
   const cv = document.getElementById("aurora");
-  if (!cv) return;
+  if (!cv || mobile) return;
   const ctx = cv.getContext("2d");
   const S = 0.5;
   let W, H, t = 0;
@@ -1024,7 +1032,12 @@ export async function showPlanet({ onSignIn } = {}) {
   if (!planet) {
     try {
       const m = await import("./intro3d.js");
-      planet = m.startIntro3D(el, { sounds: { grab: () => sleighShake(2, 0.05) } });
+      // Render the planet at a lower resolution on phones so it stays smooth
+      const realDpr = Object.getOwnPropertyDescriptor(window, "devicePixelRatio");
+      let swapped = false;
+      if (mobile) try { Object.defineProperty(window, "devicePixelRatio", { value: 1.25, configurable: true }); swapped = true; } catch {}
+      try { planet = m.startIntro3D(el, { sounds: { grab: () => sleighShake(2, 0.05) } }); }
+      finally { if (swapped) try { delete window.devicePixelRatio; if (realDpr) Object.defineProperty(window, "devicePixelRatio", realDpr); } catch {} }
     } catch (err) {
       console.warn("3D planet unavailable:", err);
       hidePlanet();
