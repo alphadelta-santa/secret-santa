@@ -849,7 +849,7 @@ function easterEggs(onEgg) {
     if (e.key.length !== 1) return;
     buf = (buf + e.key.toLowerCase()).replace(/[^a-z]/g, "").slice(-12);
     if (buf.endsWith("letitsnow")) { buf = ""; blizzard(); onEgg?.("snow"); }
-    if (buf.endsWith("hohoho")) { buf = ""; flySleigh(true); fireworks(6); jingle(); onEgg?.("santa"); }
+    if (buf.endsWith("hohoho")) { buf = ""; fireworks(6); jingle(); onEgg?.("santa"); }
   });
 }
 
@@ -1004,45 +1004,50 @@ export function snowcap() {
 // =====================================================================
 // INTRO: a giant wrapped present you tear open
 // =====================================================================
-export async function intro(onOpen) {
-  const el = document.getElementById("intro");
-  if (!el) return;
-  let seen = false;
-  try { seen = localStorage.getItem("ss-intro-seen") === "1" || sessionStorage.getItem("ss-intro") === "1"; } catch {}
-  if (seen) { el.remove(); return; }
+// The 3D planet is the sign-in screen.
+let planet = null;
+const introEl = () => document.getElementById("intro");
+export const isPlanetUp = () => !!introEl() && !introEl().hidden;
+function hidePlanet() {
+  const el = introEl();
+  planet?.dispose(); planet = null;
+  if (el) { el.hidden = true; el.classList.remove("out", "opening", "ready"); }
+  document.body.classList.remove("intro-on");
+}
+export async function showPlanet({ onSignIn } = {}) {
+  const el = introEl();
+  if (!el) return false;
   el.hidden = false;
+  el.classList.remove("out", "opening");
   document.body.classList.add("intro-on");
-  const finish = () => { el.remove(); document.body.classList.remove("intro-on"); onOpen?.(); };
-  let world = null;
-  try {
-    const m = await import("./intro3d.js");
-    world = m.startIntro3D(el, { sounds: { grab: () => sleighShake(2, 0.05) } });
-    el.classList.add("ready");
-  } catch (err) {
-    console.warn("3D intro unavailable:", err);
-    finish();
-    return;
+  document.getElementById("intro-open").onclick = () => { ac(); onSignIn?.(); };
+  if (!planet) {
+    try {
+      const m = await import("./intro3d.js");
+      planet = m.startIntro3D(el, { sounds: { grab: () => sleighShake(2, 0.05) } });
+    } catch (err) {
+      console.warn("3D planet unavailable:", err);
+      hidePlanet();
+      return false;
+    }
   }
-  const open = () => {
-    if (el.classList.contains("opening")) return;
-    try { localStorage.setItem("ss-intro-seen", "1"); } catch {}
-    ac();
+  el.classList.add("ready");
+  return true;
+}
+// After sign-in: fly down into the tree, then reveal the site underneath
+export function flyIntoPlanet() {
+  return new Promise((resolve) => {
+    const el = introEl();
+    if (!planet || !el || el.classList.contains("opening")) { if (!planet) hidePlanet(); resolve(); return; }
     el.classList.add("opening");
     whoosh(); sleighShake(10, 0.1);
-    world.enter(() => {
+    planet.enter(() => {
       el.classList.add("out");
-      flash(); jingle(); fireworks(4);
-      confetti(innerWidth / 2, innerHeight / 2.2, 180);
-      setTimeout(() => { world.dispose(); finish(); }, 800);
+      flash(); jingle(); fireworks(3);
+      confetti(innerWidth / 2, innerHeight / 2.2, 160);
+      setTimeout(() => { hidePlanet(); resolve(); }, 800);
     });
-  };
-  document.getElementById("intro-open").addEventListener("click", open);
-  document.getElementById("intro-skip")?.addEventListener("click", () => {
-    try { localStorage.setItem("ss-intro-seen", "1"); } catch {}
-    el.classList.add("out");
-    setTimeout(() => { world.dispose(); finish(); }, 500);
   });
-  addEventListener("keydown", function k(e) { if (e.key === "Enter") { removeEventListener("keydown", k); open(); } });
 }
 
 export function initEffects({ onSleigh, onEgg, onGinger } = {}) {
@@ -1054,7 +1059,6 @@ export function initEffects({ onSleigh, onEgg, onGinger } = {}) {
   snow(document.getElementById("snow"));
   lights();
   fxInit();
-  sleighLoop();
   easterEggs(onEgg);
   uiSounds();
   aurora();
