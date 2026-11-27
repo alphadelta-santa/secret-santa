@@ -255,7 +255,8 @@ function loadGIS() {
   });
 }
 async function mountGoogleButton(btn) {
-  if (!btn || btn.nextElementSibling?.classList.contains("gis-btn")) return;
+  // phones use the redirect sign-in instead (see firebase-api.js)
+  if (!btn || document.documentElement.classList.contains("mobile") || btn.nextElementSibling?.classList.contains("gis-btn")) return;
   if (!(await loadGIS()) || S.user) return;
   const box = document.createElement("div");
   box.className = "gis-btn";
