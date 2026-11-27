@@ -168,7 +168,18 @@ document.addEventListener("error", (e) => {
 }, true);
 setInterval(tickCountdown, 1000);
 
+// If sign-in or loading hangs (slow phone network), show a way out instead of an endless spinner
+let authSeen = false;
+function renderStuck() {
+  if (isPlanetUp()) return;
+  app.innerHTML = `<div class="card stuck"><h2>Still loading…</h2><p class="muted">This is taking longer than it should. Check your connection and try again.</p><button class="btn primary" id="stuck-reload">Try again</button></div>`;
+  $("#stuck-reload").onclick = () => location.reload();
+}
+setTimeout(() => { if (!authSeen) renderStuck(); }, 15000);
+const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
+
 api.onAuth(async (user) => {
+  authSeen = true;
   cleanup();
   S.user = user;
   if (!user) return renderLanding();
@@ -178,7 +189,8 @@ api.onAuth(async (user) => {
   app.innerHTML = `<div class="loader">${icon("snowflake")}</div>`;
   sub(api.watchPeople((p) => { S.people = p; onPeople(); }));
   sub(api.watchEvent((e) => { S.event = e || {}; updateEvent(); updateDrawStatus(); updateBudget(); updateTheirList(); updateTheirProfile(); updateMyList(); updateDeadline(); updateCrew(); }));
-  try { S.me = await api.getMyName(user.uid); } catch { S.me = null; }
+  try { S.me = await withTimeout(api.getMyName(user.uid), 12000); }
+  catch (e) { if (e?.message === "timeout") return renderStuck(); S.me = null; }
   if (S.me) enterDashboard(); else renderPicker();
   setTimeout(spamTip, 1800);
 });
