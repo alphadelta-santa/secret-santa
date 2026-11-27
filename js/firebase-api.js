@@ -1,7 +1,7 @@
 // Live data layer: Firebase Auth (Google) + Firestore.
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
-  getAuth, GoogleAuthProvider, signInWithPopup, signInWithCredential, signOut as fbSignOut, onAuthStateChanged,
+  getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signInWithCredential, signOut as fbSignOut, onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection,
@@ -13,6 +13,11 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// Phones sign in with a full-page redirect: popups get stuck on a white screen on iPhone.
+// The redirect comes back through alphadelta-santa.github.io/__/auth (same site, so Safari allows it).
+const phone = !matchMedia("(pointer: fine)").matches || innerWidth < 700;
+getRedirectResult(auth).catch((e) => console.warn("Redirect sign-in failed:", e?.code || e));
+
 const toUser = (u) => u && { uid: u.uid, email: u.email, name: u.displayName, photo: u.photoURL || "" };
 
 export function onAuth(cb) {
@@ -22,6 +27,7 @@ export function onAuth(cb) {
 export async function signIn() {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: "select_account" });
+  if (phone) return signInWithRedirect(auth, provider);
   await signInWithPopup(auth, provider);
 }
 
