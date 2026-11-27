@@ -82,9 +82,9 @@ function deadlineBanner(where) {
   if (!d) return "";
   const done = myListDone();
   const when = d.left > 1 ? `${d.left} days left` : d.left === 1 ? "Due tomorrow" : d.left === 0 ? "Due today" : "Past due";
-  if (done) return `<div class="deadline ok">${icon("check-circle")}<div><b>Wishlist done.</b> Nice. You can keep editing until ${esc(d.label)}.</div></div>`;
+  if (done) return `<div class="deadline ok">${icon("check-circle")}<div><b>Wishlist done.</b> Nice. You can keep editing it anytime, and your Santa sees changes right away.</div></div>`;
   return `<div class="deadline ${d.left <= 3 ? "urgent" : ""}">${icon("clock")}<div><b>Wishlist due ${esc(d.label)}</b> · ${when}.
-    Add a few items or interests so your Santa isn't guessing. Reminder emails keep coming until you do.</div>
+    ${d.left < 0 ? "It's not too late, you can still add to it anytime. " : ""}Add a few items or interests so your Santa isn't guessing. Reminder emails keep coming until you do.</div>
     ${where === "home" ? `<button class="btn primary tiny" id="goto-list2">Fill it out ${icon("arrow")}</button>` : ""}</div>`;
 }
 function updateDeadline() {
