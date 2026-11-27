@@ -3,7 +3,7 @@
 
 export const firebaseConfig = {
   apiKey: "AIzaSyB2EMdwvOcbuX9YYxoQGLSSeUeOTebeO-4",
-  authDomain: "alphadelta-secret-santa.firebaseapp.com",
+  authDomain: "alphadelta-santa.github.io",
   projectId: "alphadelta-secret-santa",
   storageBucket: "alphadelta-secret-santa.firebasestorage.app",
   messagingSenderId: "290887329772",
